@@ -13,6 +13,7 @@ def product_variant_attributes(product):
             attrs.add(av.attribute)
     return attrs
 
+
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
     variants = product.variants.prefetch_related('attributes__attribute').all()
@@ -32,13 +33,28 @@ def product_detail(request, pk):
     for v in variants:
         for val in v.attributes.all():
             attr_dict.setdefault(val.attribute.name, set()).add(val.value)
-    attr_dict = {k: list(v) for k, v in attr_dict.items()}
 
-    default_variant = next((v for v in variants if v.stock > 0), variants[0] if variants else None)
+    # 🔑 Burada sort edirik
+    attr_dict = {
+        k: sorted(
+            (list(v)),          # əvvəlcə list-ə çevir
+            key=lambda x: int(x) if x.isdigit() else x
+        )
+        for k, v in attr_dict.items()
+    }
 
-    return render(request, 'catalog/product_detail.html', {
-        'product': product,
-        'variant_data': variant_data,
-        'attributes': attr_dict,
-        'default_variant': default_variant,
-    })
+    default_variant = next(
+        (v for v in variants if v.stock > 0),
+        variants[0] if variants else None
+    )
+
+    return render(
+        request,
+        'catalog/product_detail.html',
+        {
+            'product': product,
+            'variant_data': variant_data,
+            'attributes': attr_dict,
+            'default_variant': default_variant,
+        }
+    )
