@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from catalog.models import Product, ProductVariant, AttributeValue
+from catalog.models import Product, ProductVariant, AttributeValue, Category
 
 class AttributeValueSerializer(serializers.ModelSerializer):
     attribute_name = serializers.CharField(source='attribute.name', read_only=True)
@@ -35,3 +35,26 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'description', 'image', 'variants']
+
+
+class CategoryAttributesSerializer(serializers.ModelSerializer):
+    attributes = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'slug', 'attributes']
+
+    def get_attributes(self, obj):
+        variants = ProductVariant.objects.filter(product__category__in=obj.get_descendants(include_self=True)).prefetch_related('attributes__attribute')
+        
+        attr_dict = {}
+        for variant in variants:
+            for av in variant.attributes.all():
+                attr_dict.setdefault(av.attribute.name, set()).add(av.value)
+
+        for k in attr_dict:
+            try:
+                attr_dict[k] = sorted(attr_dict[k], key=lambda x: float(x))
+            except ValueError:
+                attr_dict[k] = sorted(attr_dict[k])
+        return attr_dict

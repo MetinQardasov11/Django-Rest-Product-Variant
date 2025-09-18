@@ -2,7 +2,9 @@ from rest_framework import generics
 from rest_framework.response import Response
 from catalog.models import Product, ProductVariant, AttributeValue
 from .serializers import ProductSerializer, ProductVariantSerializer, AttributeValueSerializer
-
+from rest_framework import generics
+from catalog.models import Category
+from .serializers import CategoryAttributesSerializer
 
 class ProductListAPIView(generics.ListAPIView):
     queryset = Product.objects.all()
@@ -42,3 +44,15 @@ class ProductVariantsByProductAPIView(generics.ListAPIView):
     def get_queryset(self):
         product_id = self.kwargs['pk']
         return ProductVariant.objects.filter(product_id=product_id)
+
+
+
+class CategoryAttributesAPIView(generics.RetrieveAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategoryAttributesSerializer
+    lookup_field = 'id'
+    
+    
+class CategoryListAPIView(generics.ListAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategoryAttributesSerializer

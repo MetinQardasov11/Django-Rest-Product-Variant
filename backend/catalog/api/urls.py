@@ -6,6 +6,8 @@ from .views import (
     ProductVariantDetailAPIView,
     AttributeValueListAPIView,
     ProductVariantsByProductAPIView,
+    CategoryAttributesAPIView,
+    CategoryListAPIView
 )
 
 urlpatterns = [
@@ -15,4 +17,7 @@ urlpatterns = [
     path('variants/', ProductVariantListAPIView.as_view(), name='api-variant-list'),
     path('variants/<int:pk>/', ProductVariantDetailAPIView.as_view(), name='api-variant-detail'),
     path('attributes/', AttributeValueListAPIView.as_view(), name='api-attribute-list'),
+    path('category/<int:id>/attributes/', CategoryAttributesAPIView.as_view(), name='category-attributes'),
+    path('categories/', CategoryListAPIView.as_view(), name='api-category-list'),
+
 ]
