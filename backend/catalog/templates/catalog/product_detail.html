@@ -1,0 +1,105 @@
+{% extends 'catalog/base.html' %}
+{% load static %}
+{% block title %}
+  {{ product.name }}
+{% endblock %}
+
+{% block content %}
+  <div class="product-detail">
+    <!-- Məhsul şəkli -->
+    {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}" />
+    {% else %}
+      <img src="{% static 'catalog/placeholder.png' %}" alt="{{ product.name }}" />
+    {% endif %}
+
+    <div class="product-info">
+      <h2>{{ product.name }}</h2>
+      <p class="description">{{ product.description }}</p>
+
+      <!-- Variant Seçimləri -->
+      <div class="selectors">
+        {% for attr, values in attributes.items %}
+          <label>
+            {{ attr }}:<select class="attr-select" data-attr="{{ attr }}">
+              {% for v in values %}
+                <option value="{{ v }}">{{ v }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        {% endfor %}
+      </div>
+
+      <!-- Qiymət və SKU -->
+      <p class="product-price">
+        Price: <span id="price" class="price-text"></span> ₼
+      </p>
+      <p class="product-sku">
+        SKU: <span id="sku"></span>
+      </p>
+    </div>
+  </div>
+
+  <style>
+    .price-text.normal {
+      color: green;
+      transition: all 0.3s ease;
+    }
+    .price-text.out-of-stock {
+      color: red;
+      font-weight: bold;
+      animation: flash 1s ease-in-out infinite;
+    }
+    @keyframes flash {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+  </style>
+
+  <script>
+const variants = {{ variant_data|safe }};
+const defaultVariant = {{ default_variant.id|default:"null" }};
+
+// Variant göstərmə funksiyası
+function showVariant(v) {
+    if (v.stock > 0) {
+        $('#price').text(v.price).removeClass().addClass('price-text normal');
+        $('#sku').text(v.sku);
+    } else {
+        $('#price').text('Stokda bitib').removeClass().addClass('price-text out-of-stock');
+        $('#sku').text(v.sku);
+    }
+}
+
+// İlk yüklənmə zamanı default variantı göstər
+showVariant(defaultVariant);
+
+// Variant seçimi dəyişdikdə
+function updateVariant() {
+    const selected = {};
+    $('.attr-select').each(function() {
+        selected[$(this).data('attr')] = $(this).val();
+    });
+
+    let found = false;
+    for (const [id, v] of Object.entries(variants)) {
+        const match = Object.entries(v.attributes).every(([k,val]) => selected[k] === val);
+        if (match) {
+            showVariant(v);
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) showVariant(defaultVariant);
+}
+
+$('.attr-select').on('change', updateVariant);
+$(document).ready(updateVariant);
+</script>
+{% endblock %}
