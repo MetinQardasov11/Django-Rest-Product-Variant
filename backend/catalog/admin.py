@@ -1,7 +1,7 @@
 from django.contrib import admin
 from mptt.admin import MPTTModelAdmin
 from .models import (
-    Product, Attribute, AttributeValue, ProductVariant, Category
+    Product, Attribute, AttributeValue, ProductVariant, Category, Wishlist
 )
 
 class AttributeValueInline(admin.TabularInline):
@@ -30,3 +30,6 @@ class CategoryAdmin(MPTTModelAdmin):
     list_display = ('name', 'parent', 'total_products_count')
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name',)
+
+
+admin.site.register(Wishlist)

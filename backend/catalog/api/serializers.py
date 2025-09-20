@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from catalog.models import Product, ProductVariant, AttributeValue, Category
+from catalog.models import Product, ProductVariant, AttributeValue, Category, Wishlist
 
 class AttributeValueSerializer(serializers.ModelSerializer):
     attribute_name = serializers.CharField(source='attribute.name', read_only=True)
@@ -14,7 +14,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariant
-        fields = ['id', 'sku', 'price', 'stock', 'attributes']
+        fields = ['id', 'slug', 'sku', 'price', 'stock', 'attributes']
         
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -58,3 +58,12 @@ class CategoryAttributesSerializer(serializers.ModelSerializer):
             except ValueError:
                 attr_dict[k] = sorted(attr_dict[k])
         return attr_dict
+    
+    
+class WishlistSerializer(serializers.ModelSerializer):
+    variant_detail = ProductVariantSerializer(source="variant", read_only=True)
+
+    class Meta:
+        model = Wishlist
+        fields = ["id", "variant", "variant_detail", "created_at"]
+        read_only_fields = ["id", "created_at"]

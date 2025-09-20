@@ -3,6 +3,10 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 from mptt.models import MPTTModel, TreeForeignKey
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 
 
 class Category(MPTTModel):
@@ -77,9 +81,24 @@ class ProductVariant(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
     attributes = models.ManyToManyField(AttributeValue, related_name="variants")
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+    slug = models.SlugField(max_length=255, unique=True, db_index=True, blank=True, null=True, verbose_name="Slug")
 
     def __str__(self):
-        return "None"
+        return f"{self.product.name} - {self.sku}"
+
+    
+    
+class Wishlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="wishlist_items")
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name="wishlisted_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "variant")
+
+    def __str__(self):
+        attr_pairs = self.variant.attributes.values_list("attribute__name", "value")
+        if attr_pairs:
+            attrs = ", ".join(f"{name}:{value}" for name, value in attr_pairs)
+            return f"{self.user.username} -> {self.variant.product.name} - {self.variant.sku} ({attrs})"
+        return f"{self.user.username} -> {self.variant.product.name} - {self.variant.sku}"
