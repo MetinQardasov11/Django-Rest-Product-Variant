@@ -39,10 +39,11 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class CategoryAttributesSerializer(serializers.ModelSerializer):
     attributes = serializers.SerializerMethodField()
+    children = serializers.SerializerMethodField()
     
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'attributes']
+        fields = ['id', 'name', 'slug', 'children', 'attributes']
 
     def get_attributes(self, obj):
         variants = ProductVariant.objects.filter(product__category__in=obj.get_descendants(include_self=True)).prefetch_related('attributes__attribute')
@@ -59,6 +60,10 @@ class CategoryAttributesSerializer(serializers.ModelSerializer):
                 attr_dict[k] = sorted(attr_dict[k])
         return attr_dict
     
+    def get_children(self, obj):
+        if obj.get_children():
+            return CategoryAttributesSerializer(obj.get_children(), many=True).data
+        return []
     
 class WishlistSerializer(serializers.ModelSerializer):
     variant_detail = ProductVariantSerializer(source="variant", read_only=True)

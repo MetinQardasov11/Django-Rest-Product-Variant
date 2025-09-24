@@ -61,7 +61,7 @@ class CategoryAttributesAPIView(generics.RetrieveAPIView):
     
     
 class CategoryListAPIView(generics.ListAPIView):
-    queryset = Category.objects.all()
+    queryset = Category.objects.filter(parent__isnull=True)
     serializer_class = CategoryAttributesSerializer
     permission_classes = [permissions.AllowAny]
     
